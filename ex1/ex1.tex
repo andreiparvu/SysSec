@@ -1,0 +1,212 @@
+% IMPORTANT: add or remove (comment out) the boolean '\solutiontrue' below to
+% create the solution document or the exercise document respectively.
+% First we create the switch to make either the exercises or the solutions
+\newif\ifsolution\solutionfalse
+% To create the solution uncomment '\solutiontrue'
+\solutiontrue
+
+\documentclass[a4paper,11pt]{article}
+\title{System Security, Autumn 2014}
+
+\ifsolution\author{Andrei Parvu}
+\else\author{Exercise 1}\fi
+
+\include{author}
+
+\usepackage[T1]{fontenc}
+\usepackage{ae, aecompl}
+\usepackage{a4wide}
+\usepackage{boxedminipage}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{enumerate}
+
+% Some useful commands and environments
+\newcommand{\includeonlyinsolution}[1]{\ifsolution#1\fi}
+\usepackage{framed}
+\newenvironment{solution}%
+{\par{\noindent\small\textit{Solution:}}\vspace{-12pt}\begin{framed}}%
+{\end{framed}\par}
+
+\begin{document}
+\maketitle
+
+\includeonlyinsolution{
+\subsection*{General remarks}
+Here are a few remarks that are always a good to remember when you are doing the
+exercises. These remarks apply to all the exercises but will just be included
+here as a friendly advise.
+\begin{itemize}
+\item Be specific. What is important? It is better to explain the ``cause'' of a
+problem in detail, than to only mention a ``consequence''.
+\item Answer all questions as thoroughly as you can.
+\item Google is your friend.
+\item Many spelling/formulation errors give a careless impression.
+\end{itemize}
+}
+
+\section{Cryptography Basics}
+This section will review some basic security concepts.
+\begin{enumerate}[(a)]
+\item Explain the terms \emph{Integrity}, \emph{Confidentiality},
+  \emph{Authentication}, \emph{Authorization}, and 
+  \emph{Denial of Service}.
+\includeonlyinsolution{\begin{solution}
+\begin{itemize}
+  \item \emph{Integrity}: Prevention of unauthorized modification of information \cite{CompSec}
+  \item \emph{Confidentiality}: Prevention of unauthorized disclosure of information \cite{CompSec}
+  \item \emph{Authentication}: Verifying the identity of a given entity.
+  \item \emph{Authorization}: Specifying acces rights of a given entity. Required prior authentication.
+  \item \emph{Denial of Serice}: Prevention of authorized access to resources
+  or the delaying of time-critical operations \cite{ISO7498}.
+\end{itemize}
+\end{solution}}
+
+\item Why do we need both symmetric and
+   asymmetric cryptography?
+  \includeonlyinsolution{\begin{solution}
+  Symmetric encryption has some advantages over asymmetric encryption:
+  \begin{itemize}
+    \item its keys are simpler and faster to generate (usually random) and do not need to have any special properties.
+    \item symmetric encryption keys are smaller than asymmetric ones. This is caused by the fact that
+    asymmetric keys depends on the problem of integer factorization, which, althugh difficult, is faster
+    than the brut force method used for symmetric keys.
+  \end{itemize}
+  The main disadvantage of symmetric encryption is its scalability: in a group of $n$ users, in which
+  each pair of users desires to communicate securely, a total of $O(n^2)$ keys are necessary. In a
+  similar group in which asymmetric keys are used, a total of $O(n)$ keys are used.\\
+  Because of these advantages and disadvantages, a combination of both symmetric and asymmetric
+  keys is used for communication:
+  \begin{itemize}
+    \item the authentication is done using public-private keys.
+    \item the ensuing communication is done using symmetric keys.
+  \end{itemize}
+\end{solution}}
+
+\item Describe the following five attacks \emph{Ciphertext only} / \emph{Known plaintext} /
+  \emph{Chosen plaintext} / \emph{Chosen ciphertext} / \emph{Chosen
+    cipher- and plaintext}. Rank these attacks in terms of their potential to
+  be successful.
+
+\includeonlyinsolution{\begin{solution}
+\begin{itemize}:
+  \item \emph{Ciphertext only}: the attacker has access to a set of ciphertexts, and tries to obtain
+  information about the corresponding plaintexts or about the key. Ciphertext only attack, especially
+  frequency analysis, was used to break early ciphers, such as transposition cipher or Vigenere cipher.
+  \item \emph{Known plaintext}: the attacker has samples of both the ciphertext and the corresponding
+  ciphertext and is trying to obtain the key.
+  \item \emph{Chosen plaintext}: the attacker has the capability to encrypt plaintexts and obtain
+  the corresponding ciphertexts, its goal being to obtain information about the key.
+  \item \emph{Chosen ciphertext}: the attacker has the capability of choosing a ciphertext and obtaining
+  its decryption. It is presumed that this ability is no longer available when the attacker obtains
+  the ciphertext it wants to decrypt.
+  \item \emph{Chosen cipher and plaintext}: A combination between the previous two.
+\end{solution}}
+\end{enumerate}
+
+\section{Locking System}
+A car manufacturer wants to equip his cars with a new locking system which works in
+the following way: The system is composed of a small (tamper-proof) sender embedded
+in the car key and a receiver in the car. When the sender goes close to the
+receiver, it sends a radio frequency signal. The signal consists of 128-bit string which is the
+actual cryptographic key and which will be checked by the receiver. The range of the
+sender is about $20m$.
+
+The cryptographic key length renders a brute force attack impossible and the sender
+can be considered tamper-proof.
+\begin{enumerate}[(a)]
+\item The system seems to be as secure as a classical lock. Do you see another
+possibility to break the security of the system?
+\includeonlyinsolution{\begin{solution}
+WRITE HERE.
+\end{solution}}
+
+\item What can be done to avoid the attack you just described?
+\includeonlyinsolution{\begin{solution}
+WRITE HERE.
+\end{solution}}
+
+\item Would your solution solve the ``relay attack'' problem as described in
+  Francillion A. et. al. in their work ``Relay
+  Attacks on Passive Keyless Entry and Start Systems in Modern Cars'' (\url{http://eprint.iacr.org/2010/332.pdf})?
+\includeonlyinsolution{\begin{solution}
+WRITE HERE.
+\end{solution}}
+\end{enumerate}
+
+\section{Side Channel Attacks Basics}
+This section will review some important concepts underlying the side channel
+attacks described in the lecture. 
+\begin{enumerate}[(a)]
+\item What is a side channel attack?
+\includeonlyinsolution{\begin{solution}
+WRITE HERE.
+\end{solution}}
+\item What is the difference between simple and differential side channel
+  (e.g., power, timing) analysis?
+\includeonlyinsolution{\begin{solution}
+WRITE HERE.
+\end{solution}}
+
+\item Computers and screens emit electromagnetic waves which can be measured and
+analyzed from a distance. This might allow an attacker to draw conclusions from the
+processed data. On which parameters does the maximum ``attack--distance'' from the
+receiver to the emission source depend?
+\includeonlyinsolution{\begin{solution}
+WRITE HERE.
+\end{solution}}
+
+
+\end{enumerate}
+
+\section{Simple Power Analysis Attacks on RSA}
+\begin{enumerate}[(a)]
+
+\item The ``Square and Multiply'' algorithm is commonly used to implement
+  modular exponentiation. The algorithm computes the exponentiation by a
+  series of squarings and multiplications. It processes the exponent bitwise,
+  and for each bit, a squaring is executed. If the current bit of the exponent
+  is $e_i=1$, the intermediate result is multiplied with the base $a$. \\
+  What makes RSA implementations that use square and multiply (in its native
+  form that we just described) vulnerable to a side channel
+  attack?
+\includeonlyinsolution{\begin{solution}
+WRITE HERE.
+\end{solution}}
+
+
+\item Which platforms are most vulnerable to power-based side-channel attacks and why?
+\includeonlyinsolution{\begin{solution}
+WRITE HERE.
+\end{solution}}
+\end{enumerate}
+
+
+\section{Cache-timing Attack on AES}
+\begin{enumerate}[(a)]
+\item What is the vulnerability exploited in the attack described at the
+  lecture? Does the vulnerability lie in the design or in the implementation of AES?
+\includeonlyinsolution{\begin{solution}
+WRITE HERE.
+\end{solution}}
+
+\item For a $k$ byte key, how many messages would you require in theory for
+  this attack? You may assume a noiseless/ideal measurement system.
+\includeonlyinsolution{\begin{solution}
+WRITE HERE.
+\end{solution}}
+\end{enumerate}
+
+\begin{thebibliography}{1}
+
+  \bibitem{ISO7498} Interntional Organization for Standardization
+    {\em Basic Reference Model for Open Systems Interconnection:
+    Security Architecture}  1989.
+  \bibitem{CompSec} Dieter Gollmann {\em Computer Security}, 2011
+\end{thebibliography}
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
