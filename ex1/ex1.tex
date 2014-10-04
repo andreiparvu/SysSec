@@ -53,11 +53,11 @@ This section will review some basic security concepts.
   \emph{Denial of Service}.
 \includeonlyinsolution{\begin{solution}
 \begin{itemize}
-  \item \emph{Integrity}: Prevention of unauthorized modification of information \cite{CompSec}
-  \item \emph{Confidentiality}: Prevention of unauthorized disclosure of information \cite{CompSec}
+  \item \emph{Integrity}: Prevention of unauthorized modification of information \cite{CompSec}.
+  \item \emph{Confidentiality}: Prevention of unauthorized disclosure of information \cite{CompSec}.
   \item \emph{Authentication}: Verifying the identity of a given entity.
-  \item \emph{Authorization}: Specifying acces rights of a given entity. Required prior authentication.
-  \item \emph{Denial of Serice}: Prevention of authorized access to resources
+  \item \emph{Authorization}: Specifying access rights of a given entity. Required prior authentication.
+  \item \emph{Denial of Service}: Prevention of authorized access to resources
   or the delaying of time-critical operations \cite{ISO7498}.
 \end{itemize}
 \end{solution}}
@@ -69,12 +69,14 @@ This section will review some basic security concepts.
   \begin{itemize}
     \item its keys are simpler and faster to generate (usually random) and do not need to have any special properties.
     \item symmetric encryption keys are smaller than asymmetric ones. This is caused by the fact that
-    asymmetric keys depends on the problem of integer factorization, which, althugh difficult, is faster
-    than the brut force method used for symmetric keys.
+    asymmetric keys depend on the problem of integer factorization, which, although difficult, is faster
+    than the brute force method used for symmetric keys.
   \end{itemize}
   The main disadvantage of symmetric encryption is its scalability: in a group of $n$ users, in which
   each pair of users desires to communicate securely, a total of $O(n^2)$ keys are necessary. In a
   similar group in which asymmetric keys are used, a total of $O(n)$ keys are used.\\
+  Also, in order to establish a common private key for communication a public key technique must
+  be used to distribute the secret key. \\
   Because of these advantages and disadvantages, a combination of both symmetric and asymmetric
   keys is used for communication:
   \begin{itemize}
@@ -89,11 +91,11 @@ This section will review some basic security concepts.
   be successful.
 
 \includeonlyinsolution{\begin{solution}
-\begin{itemize}:
+\begin{itemize}
   \item \emph{Ciphertext only}: the attacker has access to a set of ciphertexts, and tries to obtain
   information about the corresponding plaintexts or about the key. Ciphertext only attack, especially
   frequency analysis, was used to break early ciphers, such as transposition cipher or Vigenere cipher.
-  \item \emph{Known plaintext}: the attacker has samples of both the ciphertext and the corresponding
+  \item \emph{Known plaintext}: the attacker has samples of both the plaintext and the corresponding
   ciphertext and is trying to obtain the key.
   \item \emph{Chosen plaintext}: the attacker has the capability to encrypt plaintexts and obtain
   the corresponding ciphertexts, its goal being to obtain information about the key.
@@ -101,6 +103,23 @@ This section will review some basic security concepts.
   its decryption. It is presumed that this ability is no longer available when the attacker obtains
   the ciphertext it wants to decrypt.
   \item \emph{Chosen cipher and plaintext}: A combination between the previous two.
+
+  The {\em Ciphertext only} type of attack is the least able to succeed, if one is using a modern
+  block cipher or a stream cipher.\\
+  The {\em Known plaintext} can be used for certain ciphers, such as the one-time pad (if an attacker
+  has both the ciphertext and the plaintext he can obtain the key by applying the $xor$ operator
+  between the two).\\
+  The {\em Chosen plaintext} attack is more powerful than the {\em Known plaintext} one because it
+  presumes that the attacker has access to a service which encrypts given plaintexts. Therefore, the
+  attacker has all the information given by the {\em Known plaintext} and also has access to various
+  side information such as running time of the encryption or power consumption of the device. It can
+  be used for side-channel attacks.\\
+  According to \cite{ModernCrypt}, the {\em Chosen ciphertext} attack is the most powerful and with
+  the most potential to succeed, encryption schemes needing to be \emph{non-malleable} to prevent
+  such an attack. \emph{Non-malleability} refers to "the property that if the adversary tries to
+  modify a given ciphertext, the result is either an illegal ciphertext or one that encrypts a plaintext
+  having no relation to the original one." \cite{ModernCrypt}.
+\end{itemize}
 \end{solution}}
 \end{enumerate}
 
@@ -118,34 +137,61 @@ can be considered tamper-proof.
 \item The system seems to be as secure as a classical lock. Do you see another
 possibility to break the security of the system?
 \includeonlyinsolution{\begin{solution}
-WRITE HERE.
+The problem with this method is that when the sender emits the 128-bit string, someone
+else may be eavesdropping on the given frequency. Thus, the attacker can obtain the
+string and later use it for opening the car.
 \end{solution}}
 
 \item What can be done to avoid the attack you just described?
 \includeonlyinsolution{\begin{solution}
-WRITE HERE.
+There are two (maybe more) possibilites to avoid such an attack, both of them
+relying on modifying the 128-bit string at every authentication:
+\begin{itemize}
+  \item we can maintain a pair of public-private keys, one at the receiver (car) and one
+  at the sender (key). The receiver/car can encrypt a random generated string using the public
+  key, send it to the sender/car-key, which decrypts using the private key and then sends
+  the string back to the receiver. Thus, even if someone obtains the decrypted string, it cannot
+  use it later.
+  \item another solution would be to use a time-synchronized one-time password, similar to the ones
+  used in bank security tokens. There must exist a synchronization between the car key and the car,
+  with the string that is sent from one to another changed at a fix interval of time. Thus, even if
+  one message is intercepted, it cannot be used later.
+\end{itemize}
 \end{solution}}
 
 \item Would your solution solve the ``relay attack'' problem as described in
   Francillion A. et. al. in their work ``Relay
   Attacks on Passive Keyless Entry and Start Systems in Modern Cars'' (\url{http://eprint.iacr.org/2010/332.pdf})?
 \includeonlyinsolution{\begin{solution}
-WRITE HERE.
+The two forms presented above would not resolve the ``relay attack'' since someone
+could still amplify the signal from the key and send it to the car. To solve this,
+one could use one of the solutions presented in the above article, such as adding the
+possibility of disabling the sending of signals from the key to the car. This applies
+to the second solution shown above, because in the first, the car is the one who initiates
+the communication. Adding a button to the car would not help, as the attacker could easily
+use it.
 \end{solution}}
 \end{enumerate}
 
 \section{Side Channel Attacks Basics}
 This section will review some important concepts underlying the side channel
-attacks described in the lecture. 
+attacks described in the lecture.
 \begin{enumerate}[(a)]
 \item What is a side channel attack?
 \includeonlyinsolution{\begin{solution}
-WRITE HERE.
+A side channel attack is an attack that uses side information leaked from an
+existing implementation of a cryptosystem, other than the plaintext or the ciphertext.
+This information can be either the running time of an encryption, the power consumption,
+the EM emissions, the heat, etc.
 \end{solution}}
 \item What is the difference between simple and differential side channel
   (e.g., power, timing) analysis?
 \includeonlyinsolution{\begin{solution}
-WRITE HERE.
+Simple side channel attacks use information (power consumed or duration of execution)
+during a single execution of an encryption operation. Usually they are based on looking at
+the visual representation of the measured metric.\\
+Differential side channel attacks, on the other hand, use statistical analysis
+on partial operations of the execution of an encryption operation.
 \end{solution}}
 
 \item Computers and screens emit electromagnetic waves which can be measured and
@@ -153,7 +199,11 @@ analyzed from a distance. This might allow an attacker to draw conclusions from 
 processed data. On which parameters does the maximum ``attack--distance'' from the
 receiver to the emission source depend?
 \includeonlyinsolution{\begin{solution}
-WRITE HERE.
+The emitted electromagnetic waves can be contained inside the corresponding devices
+and thus decreasing the maximum ``attack--distance'' from the receiver to the source.
+According to \cite{AttacksOnSmartcards}, measures for containing the radiation are:
+metal layers added to the device/chip, blurring the emanation, introducing more
+noise into the EM field and smaller dimension of transistors.
 \end{solution}}
 
 
@@ -171,13 +221,27 @@ WRITE HERE.
   form that we just described) vulnerable to a side channel
   attack?
 \includeonlyinsolution{\begin{solution}
-WRITE HERE.
+The vulnerability comes from the key-dependent branching. If bit $k$ of the key
+is equal to one, then a multiplication and a modulo operation is done, otherwise,
+just an assignment operation. Thus, the execution time depends on the number of
+bits of the key.\\
+Moreover, we can run the encryption algorithm for a certain key as many times
+as we want, with various inputs, and compute the variance of its running time.
+We can guess the first $b$ bits of the key and then, using the computed variance,
+we can determine if a certain value for bit $b+1$ is correct, if the variance decreases.
 \end{solution}}
 
 
 \item Which platforms are most vulnerable to power-based side-channel attacks and why?
 \includeonlyinsolution{\begin{solution}
-WRITE HERE.
+The most vulnerable platforms for power-based analysis are Smartcards, RFID chips
+and Sensor Nodes. This occurs because many of these devices are available for physical access
+and because they don't have their own power source, but it is provided by the reader (which can
+then measure it). Also, unlike PCs or larger machines, they tend to be application specific: a single
+application (in our case the encryption/decryption system) runs of them, so it is easier to obtain
+the desired information. This would prove difficult for a PC on which, because of task scheduling
+and multiprogramming, many application/processes run.
+
 \end{solution}}
 \end{enumerate}
 
@@ -187,7 +251,19 @@ WRITE HERE.
 \item What is the vulnerability exploited in the attack described at the
   lecture? Does the vulnerability lie in the design or in the implementation of AES?
 \includeonlyinsolution{\begin{solution}
-WRITE HERE.
+  The vulnerability lies in the implementation of the AES encryption. During each of the
+  $9$ rounds three different function are applied to the current state: SubBites, ShiftRows
+  and MixColumns. For a fast implementation (especially on a processor with word length
+  of 32) these three function can be combined into a single table lookup (this transformation
+  is explained in \cite{Rijndael}).\\
+  The problem lies within the table lookup: the index is key-dependent and message dependent.
+  For example, the first table lookup is $T[k[0] \oplus n[0]]$, where $k[0]$ is the first byte
+  of the key, and $n[0]$ is the first byte of the plaintext. The time to access a certain index
+  depends on the address of the position, and whether data will be in the cache or in the main
+  memory.\\
+  Therefore, a system profiling can tell, for example, which value of $k[0] \oplus n[0]$ generates the maximum
+  AES encryption time and then extract the key from that value and the plaintext.
+
 \end{solution}}
 
 \item For a $k$ byte key, how many messages would you require in theory for
@@ -199,10 +275,14 @@ WRITE HERE.
 
 \begin{thebibliography}{1}
 
-  \bibitem{ISO7498} Interntional Organization for Standardization
+  \bibitem{ISO7498} International Organization for Standardization
     {\em Basic Reference Model for Open Systems Interconnection:
     Security Architecture}  1989.
-  \bibitem{CompSec} Dieter Gollmann {\em Computer Security}, 2011
+  \bibitem{CompSec} Dieter Gollmann {\em Computer Security}, 2011.
+  \bibitem{AttacksOnSmartcards} Adam Matthews, {\em Low Cost Attacks on Smart Cards
+  The Electromagnetic Side-Channel}, 2006.
+  \bibitem{Rijndael} Joan Daemen, Vincent Rijmen, {\em AES Proposal: Rijndael}, 1998
+  \bibitem{ModernCrypt} Jonathan Katz, Yehuda Lindell {\em Introduction to Modern Cryptography}, 2008.
 \end{thebibliography}
 \end{document}
 
