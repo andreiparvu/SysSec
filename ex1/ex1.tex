@@ -1,17 +1,4 @@
-% IMPORTANT: add or remove (comment out) the boolean '\solutiontrue' below to
-% create the solution document or the exercise document respectively.
-% First we create the switch to make either the exercises or the solutions
-\newif\ifsolution\solutionfalse
-% To create the solution uncomment '\solutiontrue'
-\solutiontrue
-
 \documentclass[a4paper,11pt]{article}
-\title{System Security, Autumn 2014}
-
-\ifsolution\author{Andrei Parvu}
-\else\author{Exercise 1}\fi
-
-\include{author}
 
 \usepackage[T1]{fontenc}
 \usepackage{ae, aecompl}
@@ -20,6 +7,23 @@
 \usepackage{url}
 \usepackage{graphicx}
 \usepackage{enumerate}
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}
+
+% IMPORTANT: add or remove (comment out) the boolean '\solutiontrue' below to
+% create the solution document or the exercise document respectively.
+% First we create the switch to make either the exercises or the solutions
+\newif\ifsolution\solutionfalse
+% To create the solution uncomment '\solutiontrue'
+\solutiontrue
+
+\title{System Security, Autumn 2014}
+
+\ifsolution\author{Andrei Pârvu}
+\else\author{Exercise 1}\fi
+
+\include{author}
 
 % Some useful commands and environments
 \newcommand{\includeonlyinsolution}[1]{\ifsolution#1\fi}
@@ -30,20 +34,6 @@
 
 \begin{document}
 \maketitle
-
-\includeonlyinsolution{
-\subsection*{General remarks}
-Here are a few remarks that are always a good to remember when you are doing the
-exercises. These remarks apply to all the exercises but will just be included
-here as a friendly advise.
-\begin{itemize}
-\item Be specific. What is important? It is better to explain the ``cause'' of a
-problem in detail, than to only mention a ``consequence''.
-\item Answer all questions as thoroughly as you can.
-\item Google is your friend.
-\item Many spelling/formulation errors give a careless impression.
-\end{itemize}
-}
 
 \section{Cryptography Basics}
 This section will review some basic security concepts.
@@ -139,19 +129,23 @@ possibility to break the security of the system?
 \includeonlyinsolution{\begin{solution}
 The problem with this method is that when the sender emits the 128-bit string, someone
 else may be eavesdropping on the given frequency. Thus, the attacker can obtain the
-string and later use it for opening the car.
+string and later use it for opening the car.\\
+This can be either done by placing a receiver in the general area of the car and picking
+up the secret key when the owner comes by, or by following the owner and reading the cryptographic
+key which is constantly emitted from his car key.
 \end{solution}}
 
 \item What can be done to avoid the attack you just described?
 \includeonlyinsolution{\begin{solution}
-There are two (maybe more) possibilites to avoid such an attack, both of them
+There are two (possibly more) possibilities to avoid such an attack, both of them
 relying on modifying the 128-bit string at every authentication:
 \begin{itemize}
   \item we can maintain a pair of public-private keys, one at the receiver (car) and one
-  at the sender (key). The receiver/car can encrypt a random generated string using the public
-  key, send it to the sender/car-key, which decrypts using the private key and then sends
-  the string back to the receiver. Thus, even if someone obtains the decrypted string, it cannot
-  use it later.
+  at the sender (key). The receiver(car) can send a random generated string
+  to the sender(car-key), which will encrypt it using its private key and then send
+  then send it back to the receiver. The receiver can decrypt the received message using
+  the key's public key and compare it with the initial one. Thus, even if someone obtains
+  the decrypted string, it cannot use it later.
   \item another solution would be to use a time-synchronized one-time password, similar to the ones
   used in bank security tokens. There must exist a synchronization between the car key and the car,
   with the string that is sent from one to another changed at a fix interval of time. Thus, even if
@@ -191,7 +185,10 @@ Simple side channel attacks use information (power consumed or duration of execu
 during a single execution of an encryption operation. Usually they are based on looking at
 the visual representation of the measured metric.\\
 Differential side channel attacks, on the other hand, use statistical analysis
-on partial operations of the execution of an encryption operation.
+on partial operations of the execution of an encryption operation. They focus
+on timing/power analysis on parts of the encryption/decryption algorithm, instead of the
+overall execution.
+
 \end{solution}}
 
 \item Computers and screens emit electromagnetic waves which can be measured and
@@ -203,7 +200,10 @@ The emitted electromagnetic waves can be contained inside the corresponding devi
 and thus decreasing the maximum ``attack--distance'' from the receiver to the source.
 According to \cite{AttacksOnSmartcards}, measures for containing the radiation are:
 metal layers added to the device/chip, blurring the emanation, introducing more
-noise into the EM field and smaller dimension of transistors.
+noise into the EM field and smaller dimension of transistors. Essentially, building
+a Faraday cage around the device can stop these emissions, but this can be difficult
+and quite unfeasible.
+
 \end{solution}}
 
 
@@ -269,7 +269,21 @@ and multiprogramming, many application/processes run.
 \item For a $k$ byte key, how many messages would you require in theory for
   this attack? You may assume a noiseless/ideal measurement system.
 \includeonlyinsolution{\begin{solution}
-WRITE HERE.
+The number of messages send depends on the actual key used for AES, as well as
+the correlations obtained from the profiling phase.\\
+In \cite{CacheTiming}, to obtain an 128-bit key, the author used a number of 4196901 400-bytes,
+800-bytes and 600-bytes messages in the preparation of the attack.\\
+During the actual attack, he used:
+\begin{itemize}
+  \item $2^{25}$ 800-bytes packages
+  \item $2^{25}$ 600-bytes packages
+  \item $2^{27}$ 400-bytes packages
+\end{itemize}
+
+The number of packets and the size of the packets play an important role in determining
+the constraints on the given key, because they provide the correlations between the bytes
+of the key and the bytes of the plaintext.
+
 \end{solution}}
 \end{enumerate}
 
@@ -283,6 +297,7 @@ WRITE HERE.
   The Electromagnetic Side-Channel}, 2006.
   \bibitem{Rijndael} Joan Daemen, Vincent Rijmen, {\em AES Proposal: Rijndael}, 1998
   \bibitem{ModernCrypt} Jonathan Katz, Yehuda Lindell {\em Introduction to Modern Cryptography}, 2008.
+  \bibitem{CacheTiming} Daniel J. Bernstein {\em Cache-timing attacks on AES}.
 \end{thebibliography}
 \end{document}
 
