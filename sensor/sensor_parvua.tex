@@ -22,6 +22,7 @@ RSA and Sensor Node}
 \usepackage{graphicx}
 \usepackage{enumerate}
 \usepackage{hyperref}
+\usepackage{listings}
 
 % Some useful commands and environments
 \usepackage{framed}
@@ -42,9 +43,9 @@ that result in this equation.
 \ifsolution\begin{solution}
 $N$ has been chosen so that it is a product of two large primes, ($N = P * Q$).
 Then, $E$ is selected as being a random number, with $E$ less than and co-prime with
-$\phi(N) = (P - 1) * (Q - 1)$. $(E, N)$ then forms the public key.\\
+$\phi(N) = (P - 1) * (Q - 1)$. $(E, N)$ forms the public key.\\
 The private key will be the pair $(D, N)$ , with $D$ being chosen such that
-$D$ with $E * D \equiv 1 \pmod{\phi(N)}$.\\
+$E * D \equiv 1 \pmod{\phi(N)}$.\\
 Given these properties, we can analyse the encryption and descryption.
 \begin{itemize}
   \item encryption: given plaintext $p$, ciphertext $c$ will be $c = (p^E) \% N$.
@@ -90,20 +91,92 @@ contains a data and a text section. However, the disassembler might not be able
 to tell the difference.}
 
 \ifsolution\begin{solution}
-WRITE HERE.
+The dumped image file is in \emph{ihex} format \cite{ihex}. Each line in the file
+has the following format:
+\begin{itemize}
+  \item a start colon $:$
+  \item byte count (in our case it's {\tt 0x10})
+  \item address, consisting of four hex digits
+  \item record type (in our case {\tt 0x00})
+  \item 16 bytes
+  \item 1 checksum byte
+\end{itemize}
+
+This format is not easily read so we cannot determine the secret RSA key just from
+looking at it.\\
+Thus, I transformed this file in a ti-TXT format \cite{titxt}. Each section start
+with a $a$ symbol followed by the start address in hexa. Then, on the next line,
+16 bytes of data follow. The first line of \texttt{rsa.txt} translated into ti-TXT
+format looks like this:\\
+\begin{lstlisting}
+@4000
+B2 40 80 5A 20 01 3F 40 A8 58 3E 40 00 11 3D 40
+\end{lstlisting}
+
+Using this file format I was able to disassemble it using the package python-msp430-tools,
+and obtained the corresponding assembly code.
+
 \end{solution}\fi
 
 \item What is the key that you found? Which hints helped you to
 locate/extract it? Verify that you found the correct key. Describe your
 verification procedure!
 \ifsolution\begin{solution}
-WRITE HERE.
+First of all, I looked for the modulus $N$ in the memory dump file in order to
+see its exact address and how is it used. I was able to find it residing at address
+{\tt 0x406c} (I also had to take into account the possible endianness of the memory).\\
+After that, I checked the assembly code where the address {\tt 0x406c} is used and, of course,
+I found an operation of the form:
+\begin{lstlisting}
+move  &0x406c #0x1160
+\end{lstlisting}
+
+I deduced that the same kind of operation has to be done for the secret exponent $D$, so I
+did a search on the assembly code and obtained the following possible memory address candidates:
+{\tt 0x405c}, {\tt 0x404c}, {\tt 0x403a}, {\tt 0x40e4} and {\tt 0x403a}.\\
+All I had to do was look through these addresses and check whether the 14 or 16 byte value starting
+from that address is the secret key. For this purpose I implemented three functions in Python:
+a logarithmic multiplication for encrypting and decrypting, one for collecting the key from a certain
+address and one that looped through the base addresses and checked the key. I had chosen a plaintext,
+encrypted it with the public key and tried to decrypt it with the candidate private keys.\\
+
+\begin{lstlisting}[language=Python]
+def mul(a, d, n):
+     rez = 1
+     while d > 0:
+         if d % 2 == 1:
+             rez *= a
+             rez %= n
+         a *= a
+         a %= n
+         d /= 2
+     return rez
+
+
+def getValue(offset):
+  s = ""
+  for i in xrange(14, -1, -2):
+    s += l[offset - start + i + 1] + l[offset - start + i]
+  return s
+
+def checkAddresses(base):
+  for b in base:
+    print mul(c, int(getValue(b), base=16), n)
+\end{lstlisting}
+
+The private key that I found is {\tt 0x114 6bd0 7f0b 74c0 86df 00b3 7c60 2a0b}, located
+at address {\tt 0x405C}.
+I also checked it with other encrypted plaintexts and veryfied that it correctly
+decrypted them.
+
 \end{solution}\fi
 
 \end{enumerate}
 
 \begin{thebibliography}{1}
 \bibitem{eulerth} \href{http://en.wikipedia.org/wiki/Euler's_theorem}{Euler's Theorem}.
+\bibitem{ihex} \href{http://en.wikipedia.org/wiki/Intel_HEX}{IHEX File Format}.
+\bibitem{titxt} \href{http://manpages.ubuntu.com/manpages/precise/man5/srec_ti_txt.5.html}{ti-TXT File Format}.
 \end{thebibliography}
 
 \end{document}
