@@ -7,12 +7,6 @@
 
 \documentclass[a4paper,11pt]{article}
 
-\title{System Security,
-\ifsolution Solution \else \fi
-RSA and Sensor Node}
-
-\include{author}
-
 
 \usepackage[T1]{fontenc}
 \usepackage{ae, aecompl}
@@ -23,6 +17,16 @@ RSA and Sensor Node}
 \usepackage{enumerate}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}
+
+\title{System Security,
+\ifsolution Solution \else \fi
+RSA and Sensor Node}
+\author{Andrei Pârvu}
+
+\include{author}
 
 % Some useful commands and environments
 \usepackage{framed}
@@ -46,12 +50,12 @@ Then, $E$ is selected as being a random number, with $E$ less than and co-prime 
 $\phi(N) = (P - 1) * (Q - 1)$. $(E, N)$ forms the public key.\\
 The private key will be the pair $(D, N)$ , with $D$ being chosen such that
 $E * D \equiv 1 \pmod{\phi(N)}$.\\
-Given these properties, we can analyse the encryption and descryption.
+Given these properties, we can analyze the encryption and decryption.
 \begin{itemize}
   \item encryption: given plaintext $p$, ciphertext $c$ will be $c = (p^E) \% N$.
   \item decryption: we compute $(c^D) \% N$, which will be equal to $(p^{E * D} \% N) =
   (p^{k * \phi(N) + 1}) \% N = ((p^{k * \phi(N)}) \% N) * (p \% N)) \% N$. Now, given
-  that $p$ and $N$ are coprime, we can use Euler Theorem \cite{eulerth} which states
+  that $p$ and $N$ are co-prime, we can use Euler Theorem \cite{eulerth} which states
   that $a^{\phi(n)} \equiv 1 \pmod{n}$. Hence, $(c^D) \% N = p \% N = p$, so we recovered
   the plaintext from the ciphertext.
 \end{itemize}
@@ -92,9 +96,9 @@ to tell the difference.}
 
 \ifsolution\begin{solution}
 The dumped image file is in \emph{ihex} format \cite{ihex}. Each line in the file
-has the following format:
+has the following structure:
 \begin{itemize}
-  \item a start colon $:$
+  \item start colon "$:$"
   \item byte count (in our case it's {\tt 0x10})
   \item address, consisting of four hex digits
   \item record type (in our case {\tt 0x00})
@@ -104,17 +108,17 @@ has the following format:
 
 This format is not easily read so we cannot determine the secret RSA key just from
 looking at it.\\
-Thus, I transformed this file in a ti-TXT format \cite{titxt}. Each section start
-with a $a$ symbol followed by the start address in hexa. Then, on the next line,
+Thus, I transformed this file in a ti-TXT format \cite{titxt}. Each section starts
+with a $@$ symbol followed by the start address in hexa. Then, on the next line,
 16 bytes of data follow. The first line of \texttt{rsa.txt} translated into ti-TXT
-format looks like this:\\
+format looks like this:
 \begin{lstlisting}
 @4000
 B2 40 80 5A 20 01 3F 40 A8 58 3E 40 00 11 3D 40
 \end{lstlisting}
 
-Using this file format I was able to disassemble it using the package python-msp430-tools,
-and obtained the corresponding assembly code.
+Using this file format I was able to disassemble it using the package {\em python-msp430-tools}
+\cite{pymsp430}, and obtained the corresponding assembly code.
 
 \end{solution}\fi
 
@@ -124,7 +128,7 @@ verification procedure!
 \ifsolution\begin{solution}
 First of all, I looked for the modulus $N$ in the memory dump file in order to
 see its exact address and how is it used. I was able to find it residing at address
-{\tt 0x406c} (I also had to take into account the possible endianness of the memory).\\
+{\tt 0x406c} (I also had to take into account the possible endianess of the memory).\\
 After that, I checked the assembly code where the address {\tt 0x406c} is used and, of course,
 I found an operation of the form:
 \begin{lstlisting}
@@ -137,8 +141,9 @@ did a search on the assembly code and obtained the following possible memory add
 All I had to do was look through these addresses and check whether the 14 or 16 byte value starting
 from that address is the secret key. For this purpose I implemented three functions in Python:
 a logarithmic multiplication for encrypting and decrypting, one for collecting the key from a certain
-address and one that looped through the base addresses and checked the key. I had chosen a plaintext,
-encrypted it with the public key and tried to decrypt it with the candidate private keys.\\
+address and one that looped through the base addresses and checked the key. I had chosen a plaintext
+then I encrypted it with the public key, tried to decrypt it with the candidate private keys and verified
+if the decrypted ciphertext is equal to the plaintext.\\
 
 \begin{lstlisting}[language=Python]
 def mul(a, d, n):
@@ -166,7 +171,7 @@ def checkAddresses(base):
 
 The private key that I found is {\tt 0x114 6bd0 7f0b 74c0 86df 00b3 7c60 2a0b}, located
 at address {\tt 0x405C}.
-I also checked it with other encrypted plaintexts and veryfied that it correctly
+I also checked it with other encrypted plaintexts and verified that it correctly
 decrypted them.
 
 \end{solution}\fi
@@ -177,6 +182,7 @@ decrypted them.
 \bibitem{eulerth} \href{http://en.wikipedia.org/wiki/Euler's_theorem}{Euler's Theorem}.
 \bibitem{ihex} \href{http://en.wikipedia.org/wiki/Intel_HEX}{IHEX File Format}.
 \bibitem{titxt} \href{http://manpages.ubuntu.com/manpages/precise/man5/srec_ti_txt.5.html}{ti-TXT File Format}.
+\bibitem{pymsp430} \href{https://pythonhosted.org/python-msp430-tools/asm/commandline.html}{Python MSP430 Tools}
 \end{thebibliography}
 
 \end{document}
