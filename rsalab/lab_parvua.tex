@@ -1,0 +1,72 @@
+% IMPORTANT: add or remove (comment out) the boolean '\solutiontrue' below to
+% create the solution document or the exercise document respectively.
+% First we create the switch to make either the exercises or the solutions
+\newif\ifsolution\solutionfalse
+% To create the solution uncomment '\solutiontrue'
+\solutiontrue
+
+\documentclass[a4paper,11pt]{article}
+
+\title{System Security,
+\ifsolution Solution \else \fi
+Lab Report}
+
+\author{List group members here.}
+
+\usepackage[T1]{fontenc}
+\usepackage{ae, aecompl}
+\usepackage{a4wide}
+\usepackage{boxedminipage}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{enumerate}
+
+% Some useful commands and environments
+\usepackage{framed}
+\newenvironment{solution}%
+{\par{\noindent\small\textit{Solution:}}\vspace{-12pt}\begin{framed}}%
+{\end{framed}\par}
+
+\begin{document}
+\maketitle
+
+\section{General Hints for the reports}
+
+To help you structuring the report on the labs, we provide you with some
+questions to answer in the report and some \textbf{hints} you might need to
+consider. Please, note that it is not an exhaustive list of questions.
+Therefore, we advise you to include more information from your hacking
+experience in the report.
+
+\section{Lab Session: Side-channel attack}
+In the lab session, the goal is to find the secret key used in a RSA
+operation by analyzing the power consumption.
+\begin{enumerate}[(a)]
+\item Explain the setup to measure the power consumption of the sensor node
+\ifsolution\begin{solution}
+WRITE HERE.
+\end{solution}\fi
+
+\item To which values did you set the oscilloscope (e.g., horizontal
+resolution) in order to observe the power trace? How did you find
+these values?
+\ifsolution\begin{solution}
+WRITE HERE.
+\end{solution}\fi
+
+\item What technique did you use to improve the measurement noise in
+the power trace?
+\ifsolution\begin{solution}
+WRITE HERE.
+\end{solution}\fi
+
+\item What is the key that you could see? Explain how you are able to
+see the key and what leads to differences in the power consumption.
+\ifsolution\begin{solution}
+WRITE HERE.
+\end{solution}\fi
+
+\end{enumerate}
+
+
+\end{document}
