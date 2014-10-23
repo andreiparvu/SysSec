@@ -7,12 +7,6 @@
 
 \documentclass[a4paper,11pt]{article}
 
-\title{System Security,
-\ifsolution Solution \else \fi
-Lab Report}
-
-\author{Andrei Pârvu, Martynas Pumputis, Andrea Lattuada}
-
 \usepackage[T1]{fontenc}
 \usepackage{ae, aecompl}
 \usepackage{a4wide}
@@ -20,6 +14,17 @@ Lab Report}
 \usepackage{url}
 \usepackage{graphicx}
 \usepackage{enumerate}
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}
+
+\title{System Security,
+\ifsolution Solution \else \fi
+Lab Report}
+
+\author{Andrei Pârvu, Martynas Pumputis, Andrea Lattuada}
+
+
 
 % Some useful commands and environments
 \usepackage{framed}
@@ -69,22 +74,22 @@ see the key and what leads to differences in the power consumption.
 \end{enumerate}
 
 \begin{figure} \centering{
-  \includegraphics[width=0.5\linewidth]{pics/print_000.png}}
+  \includegraphics[width=0.7\linewidth]{pics/print_000.png}}
   \caption{Initial two second measurement.}
   \label{fig00}
 \end{figure}
 \begin{figure} \centering{
-  \includegraphics[width=0.5\linewidth]{pics/print_001.png}}
+  \includegraphics[width=0.7\linewidth]{pics/print_001.png}}
   \caption{Two second measurement cleaned up via averaging.}
   \label{fig01}
 \end{figure}
 \begin{figure} \centering{
-  \includegraphics[width=0.5\linewidth]{pics/print_002.png}}
+  \includegraphics[width=0.7\linewidth]{pics/print_002.png}}
   \caption{LSBs of the public exponent.}
   \label{fig02}
 \end{figure}
 \begin{figure} \centering{
-  \includegraphics[width=0.5\linewidth]{pics/print_003.png}}
+  \includegraphics[width=0.7\linewidth]{pics/print_003.png}}
   \caption{LSBs of the private exponent.}
   \label{fig03}
 \end{figure}
