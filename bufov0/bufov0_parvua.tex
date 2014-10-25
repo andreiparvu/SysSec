@@ -1,0 +1,196 @@
+% IMPORTANT: add or remove (comment out) the boolean '\solutiontrue' below to
+% create the solution document or the exercise document respectively.
+% First we create the switch to make either the exercises or the solutions
+\newif\ifsolution\solutionfalse
+% To create the solution uncomment '\solutiontrue'
+\solutiontrue
+
+\documentclass[a4paper,11pt]{article}
+\title{System Security,
+\ifsolution Solution \else \fi
+Buffer Overflow 0}
+
+
+\include{author}
+
+\usepackage[T1]{fontenc}
+\usepackage{ae, aecompl}
+\usepackage{a4wide}
+\usepackage{boxedminipage}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{alltt}
+\usepackage{hyperref}
+\usepackage{listings}
+
+% Some useful commands and environments
+\usepackage{framed}
+\newenvironment{solution}%
+{\par{\noindent\small\textit{Solution:}}\vspace{-12pt}\begin{framed}}%
+{\end{framed}\par}
+
+
+
+%% tty - for displaying TTY input and output
+\newenvironment{tty}%
+{\small\begin{alltt}}%
+{\end{alltt}}
+
+\begin{document}
+\maketitle
+
+This exercise session will help you to gain understanding of calling stack frames
+and buffer overflow basics. It will also provide you with practical experience on
+how to use a debugger (gdb). The successful completion of this exercise will help
+you during the next exercise session, where you will be required to perform buffer
+overflow attacks.
+
+The folder \texttt{bufov0} inside the VM contains a binary that you should use
+for this exercise. Furthermore, you might need a tutorial such as
+\url{http://sourceware.org/gdb/current/onlinedocs/gdb.html} or
+\url{http://www.cs.virginia.edu/~evans/cs216/guides/x86.html}.
+
+The {\sc vulnapp} program provides two ways to read user input. The first is by
+supplying the user input as a program argument in the command line. The second is
+provided by the program that asks for user input during execution.
+
+In particular, the program is only vulnerable while reading user input as a program
+argument. The function {\tt cpybuf} handles the copying of the
+user input in an  insecure way.
+
+\section*{Stack frames}
+
+\begin{enumerate}
+\item Analyze the stack before (before \texttt{CALL} instruction) and after
+(after \texttt{cpybuf} stack frame was set up) calling \texttt{cpybuf} using gdb.
+To analyze the stack during the program flow you must set appropriate breakpoints
+and run the program. By using the commands \texttt{info stack} and \texttt{info
+frame} you can examine the stack and the stack frame respectively. What are the
+four command outputs and what is their meaning?
+\ifsolution
+\begin{solution}
+The call to \texttt{cpybuf} is done at address \texttt{0x08048621}, so I added a breakpoint
+at this address and another one in the actual function.\\
+At the first breakpoint, the \texttt{info stack} and \texttt{info frame} show:
+\begin{lstlisting}
+#0  0x08048621 in main ()
+\end{lstlisting}
+
+\begin{lstlisting}
+Stack level 0, frame at 0xbffff9a0:
+ eip = 0x8048621 in main; saved eip = 0xb7e17e5e
+ Arglist at 0xbffff998, args: 
+ Locals at 0xbffff998, Previous frame's sp is 0xbffff9a0
+ Saved registers:
+  ebp at 0xbffff998, eip at 0xbffff99c
+\end{lstlisting}
+
+This means that we are at address \texttt{0x08048621}, for the current frame starting at
+\texttt{0xbffff9a0}, in the main function (and the main function
+is the only function that is currently executed).\\
+
+After entering the function \texttt{cpybuf} the output changes to:
+\begin{lstlisting}
+#0  0x08048541 in cpybuf ()
+#1  0x08048626 in main ()
+\end{lstlisting}
+
+\begin{lstlisting}
+Stack level 0, frame at 0xbffff98c:
+ eip = 0x8048541 in cpybuf; saved eip = 0x8048626
+ called by frame at 0xbffff9a0
+ Arglist at 0xbffff984, args: 
+ Locals at 0xbffff984, Previous frame's sp is 0xbffff98c
+ Saved registers:
+  ebp at 0xbffff984, eip at 0xbffff988
+\end{lstlisting}
+
+Now we have to two functions that are currently executed ($cpybuf$ and $main$).
+The current $IP$ is \texttt{0x8048541}, and the saved IP is \texttt{0x8048626},
+which is the next instruction that will execute after the return from $cpybuf$.
+The frame that called this function starts at \texttt{0xbffff9a0}, which is the frame
+of the main function (see above). The saved $ebp$ is at the address \texttt{0xbffff984} in
+the stack and the saved $eip$ is at \texttt{0xbffff988}.
+
+\end{solution}\fi
+
+\item Use the information mentioned above and describe the stack frame of \texttt{cpybuf}
+straight after calling \texttt{strcpy}, i.e. right after the \texttt{CALL
+strcpy} has finished. Draw a diagram of the contents of the stack frame (from
+\texttt{esp} to \texttt{ebp + 8}) of \texttt{cpybuf} for string input:
+\textbf{ABCDEFGH}, i.e. execute the application as \texttt{./vulnapp ABCDEFGH}.
+
+
+\ifsolution\begin{solution}
+
+I set a breakpoint on the \texttt{strcpy} call in \texttt{cpybuf} and using
+the \texttt{x/12x \$sp} command I dumped the content of the stack, explained in
+the following diagram:
+\begin{lstlisting}
+EBP+8-> [ 0xbffffbb4 ] <- argument
+        [ 0x08048626 ] <- saved eip
+EBP  -> [ 0xbffff998 ] <- saved ebp
+        [ 0x00000000 ] <- because of 'DWORD PTR [ebp-0x4],0x0'
+        [ 0xb7e4a276 ] <- garbage
+        [ 0x080499c3 ] <- garbage
+        [ 0xb7e4a200 ] <- first byte '0x00' end of string
+        [ 0x48474645 ] <- 'HGFE'
+        [ 0x44434241 ] <- 'DCBA'
+        [ 0xbffffbb4 ] <- argument to 'strcpy',
+                          same as argument to function
+ESP  -> [ 0xbffff96c ] <- address of location on stack,
+                          returned by strcpy
+\end{lstlisting}
+
+\end{solution}\fi
+
+\item What is the size of the vulnerable buffer in bytes?
+
+\ifsolution\begin{solution}
+When inspecting the assembly code for the \texttt{cpybuf} function, we observe the
+following instructions
+\begin{lstlisting}
+mov    ebp,esp
+sub    esp,0x18
+....
+lea    eax,[ebp-0x18]
+push   eax
+call   0x80483d0 <strcpy@plt>
+\end{lstlisting}
+Thus, we can deduce that the size of the destination buffer for \texttt{strcpy} is \texttt{0x18},
+this being the vulnerable size.\\
+This can be tested by providing the \texttt{vulnapp} program with a string of length 24 (24 and
+not 25 because of the string terminator, which is one more byte) which causes a segmentation
+fault.
+\end{solution}\fi
+\end{enumerate}
+
+
+\section*{Stack Buffer Overflow and Stack Overflows}
+\begin{enumerate}
+\item How can you exploit a stack buffer overflow to change the program flow or
+run new code?  
+\ifsolution
+\begin{solution}
+The main idea of a buffer overflow attack is that you can change the return address
+of the function which is currently executed. Thus, when the execution of the function
+is finished, the Instruction Pointer is not returned to its previous value before the
+function call, but to a different value, chosen by the attacker.
+\end{solution}\fi
+
+
+\item What is the difference between a stack buffer overflow and a stack
+  overflow?
+\ifsolution\begin{solution}
+A stack overflow occurs when the stack size grows beyond its preassigned limit (each
+process has a limit for its stack). This overflow may be caused either by an infinite (or a very)
+long recursion, or by allocating too much local memory on the stack.\\
+A stack buffer overflow occurs when a program writes beyond the limit of a local buffer (as a vector,
+for example). In this case, several other elements located lower in the stack will be modified,
+possibly causing errors (or, at least, inconsistent data).
+\end{solution}\fi 
+\end{enumerate}
+%\end{enumerate}
+
+\end{document}
