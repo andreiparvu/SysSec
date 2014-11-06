@@ -162,7 +162,7 @@ is assured by \texttt{strcpy}). So, the stack looks like this, after the \texttt
         [ 0x080499c0 ] <- argument for system
         [ 0xb7e2eb50 ] <- saved eip / exit
         [ 0xb7e3afe0 ] <- saved eip / system
-        [ 0x41414141 ] <- saved ebp
+        [ 0x41414141 ] <- saved ebp 'AAAA'
         [ 0x41414141 ] <- 'AAAA'
         [ 0x41414141 ] <- 'AAAA'
         [ 0x41414141 ] <- 'AAAA'
@@ -173,9 +173,11 @@ is assured by \texttt{strcpy}). So, the stack looks like this, after the \texttt
 ESP  -> [ 0xbffff96c ] <- address of location on stack
 \end{lstlisting}
 
-The execution can be seen in Figure~\ref{fig:system}. The \texttt{vulnapp} exe is from
-the previous assignment. I also compiled the \texttt{vulnapp.c} and tried the same attack,
-but the input string had to be modified, as seen in Figure~\ref{fig:aoutsystem}.
+The execution can be seen in Figure~\ref{fig:system}; \texttt{geninput} is a program that generates
+a $28$ byte padding ($24$ the size of the buffer + 4 bytes saved $ebp$). The \texttt{vulnapp} exe is from
+the previous assignment.\\
+The main use of gdb was to explore the stack during debugging (with the command \texttt{x/10x \$sp})
+and to check the saved $eip$ using \texttt{info frame}.
 
 \end{solution}\fi
 
@@ -183,12 +185,6 @@ but the input string had to be modified, as seen in Figure~\ref{fig:aoutsystem}.
   \includegraphics[width=1\linewidth]{pics/system.png}
   \caption{\texttt{system} attack}
   \label{fig:system}
-\end{figure}
-
-\begin{figure}[H] \center
-  \includegraphics[width=1.1\linewidth]{pics/aout_system.png}
-  \caption{\texttt{system} attack 2}
-  \label{fig:aoutsystem}
 \end{figure}
 
 \section*{Attack 2: Execute the shell from environmental variables}
@@ -215,8 +211,10 @@ options\dots
 To find the address of the \texttt{SHELL} environment variable I used the \texttt{getenv}
 function which returns a pointer to the variable, in my case \texttt{0xbffffc64}.
 By adding it instead of the address of the stdin parameter of the program, it launched
-the corresponding shell (Figure~\ref{fig:var}). Again, for the executable I compiled,
-it's a different address (\texttt{0xbffffc68}), shown in Figure:~\ref{fig:aoutvar}.
+the corresponding shell (Figure~\ref{fig:var}).\\
+In gdb, the main way to debug and find the address of the environment variabile was to use
+the command \texttt{print *((char**)environ)} and loop through all the variabiles by
+incrementing \texttt{environ}.
 
 \end{solution}\fi
 
@@ -226,16 +224,11 @@ it's a different address (\texttt{0xbffffc68}), shown in Figure:~\ref{fig:aoutva
   \label{fig:var}
 \end{figure}
 
-\begin{figure}[H] \center
-  \includegraphics[width=1.1\linewidth]{pics/aout_var.png}
-  \caption{Environment variable attack 2}
-  \label{fig:aoutvar}
-\end{figure}
-
 \section*{Further options}
 Name another option where the argument for the call to system could be stored.
 \ifsolution\begin{solution}
-WRITE HERE.
+Another option would be to pass it as a second parameter to our program, if the program
+doesn't check the number of arguments that it receives.
 \end{solution}\fi
 
 \noindent
@@ -264,37 +257,5 @@ submissions. Your submission should contain the important gdb commands used and
 their output for each step towards successfully performing the attack. It should
 also include a brief explanation after some major steps to summarize your
 findings.
-
-\subsection*{Some Advice}
-\begin{itemize}
-\item In GDB, you can disassemble the current function using {\tt
-      disassemble} or any function using {\tt
-      disassemble functionname}
-\item All the information you need to devise your exploit can be
-  determined by debugging {\sc vulnapp} in gdb.
-\item
-Be careful about byte ordering.
-\item
-You might want to use {\sc gdb} to step the program through the last few
-instructions of {\tt cpybuf} to make sure it is doing the right thing.
-\item
-You will need to pad the beginning of your exploit string with the proper number of
-bytes to overwrite the return pointer. The values of these bytes can
-be arbitrary (0x00 is not recommended though --- why not?).
-\item As a consequence of the last hint, you may run into problems if
-  the address of {\tt system} or {\tt exit} contains zeros --- why? In
-  such a case, either consider calling a different function from the
-  libc (if the address of system contains zeros), or find a different
-  address to return to --- be creative, there is at least one easy
-  solution if the address of exit contains zero(s).
-\item Memory addresses, when started in gdb, can be different from addresses in
-normal execution.  To avoid this problem you can attach to the already running
-program.
-
-\item If you try to find the address of the environment variable the other
-provided program you might have to do a small adjustments. Why?
-
-
-\end{itemize}
 
 \end{document}
