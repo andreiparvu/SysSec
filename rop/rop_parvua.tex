@@ -38,21 +38,6 @@ Return Oriented Programming}
 \begin{document}
 \maketitle
 
-
-\section*{Introduction}
-
-This exercise introduces you to \textit{chained return-to-libc} attacks. It
-builds on your knowledge from the previous exercise. Here, you will build
-exploits for the binary program {\tt rop}.  The goal of this attack is to be
-able to execute a shell script called {\tt somefile.sh}. Please download the
-\texttt{rop.zip} archive file from the course webpage into your VM and unpack
-it with the password \texttt{0000}. To setup the \texttt{rop} folder, run
-\texttt{setup.sh} (enter the syssec password when prompted).
-
-\textbf{This is a long exercise. Please read each part carefully and answer all
-  questions as they are all given points.}
-
-
 \section{Goal}
 In this exercise, you will have to chain several libc functions
 to execute \texttt{somefile.sh} that you find in your \texttt{rop} folder. 
@@ -114,20 +99,21 @@ Using the command \texttt{ls -l} we can determine that the owner is \texttt{root
 
 \item Who is allowed to read \texttt{somefile.sh}?
 \ifsolution\begin{solution}
-Only the owner is allowed to read \texttt{somefile.sh}.
+Given the permissions of the file, \texttt{- rw- --- ---}, only the owner is allowed to read \texttt{somefile.sh}.
 \end{solution}\fi
 \item Who is allowed to write \texttt{somefile.sh}?
 \ifsolution\begin{solution}
-Only the owner is allowed to write \texttt{somefile.sh}.
+Given the permissions of the file, \texttt{- rw- --- ---}, only the owner is allowed to write \texttt{somefile.sh}.
 \end{solution}\fi
 \item Who is allowed to execute \texttt{somefile.sh}?
 \ifsolution\begin{solution}
-No one can execute \texttt{somefile.sh}.
+Given the permissions of the file, \texttt{- rw- --- ---}, no one can execute \texttt{somefile.sh} (we don't have
+any \texttt{x} set).
 \end{solution}\fi
 \item What is the 32-bit hexadecimal representation of the current permissions
   of \texttt{somefile.sh}?
 \ifsolution\begin{solution}
-The current permissions are \texttt{-rw-------}, so in hexa is would be \texttt{0x180}.
+The current permissions are \texttt{- rw- --- ---}, so in hexa is would be \texttt{0x180}.
 \end{solution}\fi
 \item What is the 32-bit hexadecimal representation for the mode 0700? 
 \ifsolution\begin{solution}
@@ -150,12 +136,12 @@ such example.
 \item What is the value of 'i' after the following code executes
 \texttt{int i; printf("\%n",\&i);}?
 \ifsolution\begin{solution}
-The value of 'i' will be $0$, because no character were printed before the $\%n$ format.
+The value of 'i' will be $0$, because no characters were printed before the $\%n$ format.
 \end{solution}\fi
 \item What is the value of 'i' after the following code executes \texttt{int i;
     printf("\%16x\%n",i,\&i);}?
 \ifsolution\begin{solution}
-The value of 'i' will be $16$, because $\%16x$ adds a padding of 16 characters to the printed value
+The value of 'i' will be $16$, because \texttt{\%16x} adds a padding of 16 characters to the printed value
 (and, even though 'i' is initialized, it cannot have more than $16$ hexa digits).
 \end{solution}\fi
 \end{itemize}
@@ -223,16 +209,16 @@ The address for 'test' is \texttt{0x8049980}, found with the \texttt{print \&tes
 \item What \texttt{printf} command will let you overwrite variable 'test'
   appropriately?
 \ifsolution\begin{solution}
-One could use \texttt{printf{"\%256x\%n", test, \&test};}, because \texttt{0x100} is $256$ in base 10.
+One could use \texttt{printf("\%256x\%n", test, \&test);}, because \texttt{0x100} is $256$ in base 10.
 \end{solution}\fi
 \item What instructions do you need to 'fix' the stack after calling
   \texttt{printf} and before calling \texttt{print\_test}? \textbf{Hint: How
     many parameters of \texttt{printf} do you have to remove before jumping to \texttt{print\_test}?}
 \ifsolution\begin{solution}
-You would have to remove 3 parameters (the ones listed above). On idea to do this is to use the combination
+You would have to remove 3 parameters (the ones listed above). One idea to do this is to use the combination
 \texttt{pop ebx; ret;} as the return address of printf, who would proceed to jump to the address pointed
 by the second parameter of printf. But the second parameter can be anything (it's not important, it just
-has to be there), so it can also be the combination \texttt{pop ebx; ret;}, which will skip the third parameter
+has to be there), so it can also store the combination \texttt{pop ebx; ret;}, which will skip the third parameter
 and jump to the address above it.
 \end{solution}\fi
 \item When you chain \texttt{printf}, \texttt{print\_test} and \texttt{exit}, what does the stack
@@ -335,16 +321,16 @@ Note that $384 + 64 = 448$, the value that will be stored in the first mode para
 \ifsolution\begin{solution}
 The commandline input will be the string which does the buffer overflow, the run-time input will be the name
 of the file \texttt{"./somefile.sh"} and an environment variable will retain the format string for printf
-\texttt{"\%384x\%n\%64x\%n"}.
+\texttt{"\%384x\%n\%64x\%n"}; for this I used \texttt{export INPUT1=\%384x\%n\%64x\%n}.
 \end{solution}\fi
 \item Please sketch the stack layout that you used with annotations if
 necessary.
 \ifsolution\begin{solution}
-The only small problem that I had was that I was difficult to jump from a call of \texttt{chmod} to the
+The only small problem that I had was that it was difficult to jump from a call of \texttt{chmod} to the
 next function because is had two parameters. In this case, I also used some instructions which were already
 at the end of the \texttt{system} function, which did \texttt{sub \$esp, 0x8; pop ebx; ret;}, so I could
-skip a total of 4 words, but I had to add an empty word after the last parameter of \texttt{chmod}, so that
-2 parameters + return address + empty word equals 4.
+skip a total of 4 words. But, in this new case, I had to add an empty word after the last parameter of \texttt{chmod}, so that
+2 parameters + return address + empty word equals 4, the number of skipped words on the stack.
 The stack looks like this:
 \begin{lstlisting}
 0xaaaaaaaa <- empty
