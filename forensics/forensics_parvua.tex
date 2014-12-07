@@ -1,0 +1,244 @@
+% IMPORTANT: add or remove (comment out) the boolean '\solutiontrue' below to
+% create the solution document or the exercise document respectively.
+% First we create the switch to make either the exercises or the solutions
+\newif\ifsolution\solutionfalse
+% To create the solution uncomment '\solutiontrue'
+\solutiontrue
+
+\documentclass[a4paper,11pt]{article}
+
+\title{System Security,
+\ifsolution Solution \else \fi
+Forensics}
+
+
+\include{author}
+
+
+\usepackage[T1]{fontenc}
+\usepackage{ae, aecompl}
+\usepackage{a4wide}
+\usepackage{boxedminipage}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage{comment}
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}
+
+\author{Andrei Pârvu}
+
+% Some useful commands and environments
+\usepackage{framed}
+\newenvironment{solution}%
+{\par{\noindent\small\textit{Solution:}}\vspace{-12pt}\begin{framed}}%
+{\end{framed}\par}
+
+\begin{document}
+\maketitle
+
+\noindent Please download the \textbf{forensics} archive from the course web-page to your home
+folder in the VM and unpack it with password 0000.
+
+\section{Recovering Deleted Data}
+The goal of this exercise is to give you hands-on experience on recovering
+data from a file system. We created a loop-back device (fsimage in the folder
+forensics), wrote two images (both in the JPEG format) to it and finally, deleted
+the images.  \newline
+
+\noindent In this exercise, you will have to try and extract (by writing a
+program/script) the deleted images from the file system using some background
+knowledge on file systems and format (syntax and structure) of JPEG
+images (\url{http://en.wikipedia.org/wiki/JPEG}). \newline
+
+
+\noindent Your solution must include:
+
+\begin{itemize}
+\item What information about JPEGs did you need to recover the images?
+\ifsolution\begin{solution}
+The information needed for extracting the images was related to the format of the
+JPEG file, specifically the bytes that signal the start of the image (\texttt{0xFF 0xD8})
+and the bytes that signal the end of the image (\texttt{0XFF 0XD9}).
+\end{solution}\fi
+
+\item The images that you recovered
+\ifsolution\begin{solution}
+The two images that I recovered are shown in Figure~\ref{fig:password} and Figure~\ref{fig:topsecret}.
+
+\end{solution}\fi
+
+\item Clean, commented code (as text in your solution) that you used to
+  recover the image
+\ifsolution
+\begin{solution}
+\begin{lstlisting}[language=C]
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#define N 1048576 // ls -l fsimage showed the size of the file
+
+unsigned char bytes[N];
+unsigned char v[2][N];
+int len[2];
+
+void do_write(unsigned char name[], int poz) {
+  // write result to file
+  int f1 = open(name, O_RDWR);
+
+  write(f1, v[poz], len[poz]);
+  close(f1);
+}
+
+int main() {
+  // open the image and read it
+  int fd = open("forensics/fsimage", O_RDONLY);
+  int i, j;
+  int cnt = 0;
+  int t = read(fd, bytes, N);
+  printf("%d\n", t);
+
+  int s = 0;
+  for (i = 0; i < N; i++) {
+    // look for start of the jpeg file, 0xff 0xd8
+    if (bytes[i] == 255 && bytes[i + 1] == 216) {
+      for (j = i; j < N; j++) {
+        // save the bytes that form the image
+        v[cnt][j - i] = bytes[j];
+        // look for the end of the jpeg file, 0xff 0xd9
+        if (bytes[j] == 255 && bytes[j + 1] == 217) {
+          v[cnt][j + 1 - i] = 217;
+
+          // save the length and start looking at the next
+          // position in the image
+          len[cnt] = j + 1 - i + 1;
+          i = j + 2;
+          cnt++;
+          break;
+        }
+      }
+    }
+  }
+
+  do_write("topsecret.jpg", 0);
+  do_write("password.jpg", 1);
+
+  return 0;
+}
+\end{lstlisting}
+Note: the program was specifically designed to recover $2$ images. If the number of images was
+unknown then it would have been necessary to dynamically allocate the vectors with the image contents.
+\end{solution}
+\fi
+
+
+\item Finally, a rationale (short description) behind why you were able to
+  recover the data.
+\ifsolution
+\begin{solution}
+The start of file bytes (\texttt{0xFF 0XD8}) and end of file bytes (\texttt{0xFF 0xD9}) delimited
+the content of the image so it could be read easily. This could have been prevented if the the
+addresses were randomized and the images were not located in a continuous memory layout.
+\end{solution}
+\fi
+
+\end{itemize}
+
+
+
+\section{Practical forensics exercise}
+
+\begin{enumerate}[(a)]
+
+\item Background story\\
+  In this practical exercise, we consider the following use case: A
+  company called Green Inc. just hired a new employee, Ms. Eve Evil. One
+  day after starting in her new job, Ms. Evil quits and
+  disappears. The head of the security department, Mr.  Gullible,
+  slightly suspects that Ms. Evil tried to steal data from the
+  company. He makes a 1:1 copy of the Linux home directory of Ms. Evil
+  on her workstation and sends this image to you to find out what
+  Ms. Evil did on her only day of work.
+
+\item Material\\
+  In the directory \texttt{forensics} inside the VM you will find the image of the
+  home file system of Ms. Evil. Set up the image as a
+  loopback device as root user: {\tt sudo mount -o loop eve\_home mpoint}.  You
+  will now find Ms. Evil's original home directory in the mpoint directory.
+
+\item Documentation\\
+  To prove that Ms. Evil indeed did something illegal, as much
+  information as possible should be gathered from the image. Be
+  creative in finding clues and try to reconstruct Ms. Evil's actions
+  to convict her.
+
+\item What information does Eve Evil illegally send out of the company? Where did you find this?
+\ifsolution\begin{solution}
+First of all, to fully inspect the image of Eve's home folder, I ran the command \texttt{ls -a -R .}.
+I first looked in the 'thunderbird' folder, where in the INBOX folder from the GMAIL account
+I saw the welcome email from Gary Green which contained confidential information: 'Green\_position.pdf'
+and 'Green\_business\_report.pdf'. These are probably the documents Eve stole.
+\end{solution} 
+\fi
+
+\item Which communication channels does she use? What are the credentials for these channels?
+\ifsolution\begin{solution}
+Continuing to explore the folders, I encountered the 'jabber' folder (which is an instant messaging
+program). I checked out the accounts and logs for it and found that Eve (gmail account eveevil82@gmail.com
+with password forensic82) had talked to Mallory (noleti@gmail.com) about the confidential documents.
+She will send one via an ftp server and another one via mail and also that we will run a certain script
+from Mallory.\\
+Continuing with the 'gftp' folder I found the logs from the ftp communication and I determined that Eve:
+\begin{itemize}
+  \item has connected to 'evil.com:21'
+  \item used the username 'eve'
+  \item used the password 'xxxx'
+  \item stored a file 'br.png'.
+  \item retrieved the file 'rootkit.sh'
+\end{itemize}
+
+\end{solution} 
+\fi
+
+\item What is transmitted over each of the channels?
+\ifsolution\begin{solution}
+Logging in Eve's gmail account in the Sent Items folder I found an email sent to jemand@gmx.ch containing
+the 'Green\_position.pdf' confidential file.\\
+Regarding the 'br.png' file uploaded on the ftp server, I used 'ack' (which is a program used to scan all the
+files in a folder for a regex) and found in the 'bash\_history' file that Eve changed the name of 'Green\_business\_report.pdf' to
+br.png before sending it (also 'Green\_position.pdf' was renamed 'bp.bin').
+Thus, I was able to determine how the two confidential documents were sent and to whom.
+\end{solution} 
+\fi
+
+\item She runs a special program. What is it and what does it do?
+\ifsolution\begin{solution}
+The program used is called 'rootkit.sh', to which Eve added execution permissions and executed it (this can
+also be found in 'bash\_history').
+\end{solution} 
+\fi
+
+\end{enumerate}
+
+
+\begin{figure} \center
+  \includegraphics[width=0.4\linewidth]{password.jpg}
+  \caption{password.jpg}
+  \label{fig:password}
+\end{figure}
+\begin{figure} \center
+  \includegraphics[width=0.4\linewidth]{topsecret.jpg}
+  \caption{topsecret.jpg}
+  \label{fig:topsecret}
+\end{figure}
+
+\section{Acknowledgements}
+This exercise was designed with the help of Claudio Marforio
+(maclaudi@inf.ethz.ch).
+
+\end{document}
